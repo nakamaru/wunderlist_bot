@@ -19,20 +19,29 @@ EM.run do
 
   ws.on :message do |event|
     data = JSON.parse(event.data)
-    p 'comments data'
-    p [:comment, data]
+    user_name = nil
 
-    if data['attachments']
-      if data['attachments'][0]['pretext'].match(/commented on/) && data['attachments'][0]['fallback'].match(/@nakamaru/)
-        url = data['attachments'][0]['pretext'].match(/https:\/\/wunderlist.com\/#\/tasks\/\d*/)
-        t = data['attachments'][0]['pretext'].match(/\|.*/).to_s
-        task_name = t.delete!("|").delete!(">")
-        message = data['attachments'][0]['text'].delete!("@nakamaru")
-        user = data['attachments'][0]['fallback'].match(/@nakamaru/)[0]
-        
+    if data['attachments'] && data['attachments'][0]['pretext'].match(/commented on/) && data['attachments'][0]['fallback'].match(/@\w{1,10}/)
+      url = data['attachments'][0]['pretext'].match(/https:\/\/wunderlist.com\/#\/tasks\/\d*/)
+      t = data['attachments'][0]['pretext'].match(/\|.*/).to_s
+      task_name = t.delete!("|").delete!(">")
+      user = data['attachments'][0]['fallback'].match(/@\w{1,10}\.?\w{1,10}/).to_s
+      message = data['attachments'][0]['text'].delete!("#{user}")
+
+      if user == "@nakamaru" || user == '@n' || user == '@maru'
+        user_name = '@nakamaru'
+      elsif user == '@murata' || user == '@m' || user == '@muratayusuke'
+        user_name = '@muratayusuke'
+      elsif user == '@fujiwara' || user == '@f' || user == '@santa0127'
+        user_name = '@santa0127'
+      elsif user == '@sato' || user == '@s' || user == '@shohei' || user == '@shohei.sato'
+        user_name = '@shohei.sato'
+      end
+
+      if user_name
         ws.send({
           type: 'message',
-          text: "タスク名：#{task_name}\n" + "#{user} " + "#{message}\n " + "#{url}",
+          text: "タスク名：#{task_name}\n" + "#{user_name} " + "#{message}\n " + "#{url}",
           channel: "C5FKTB7J5"
           }.to_json)
       end
