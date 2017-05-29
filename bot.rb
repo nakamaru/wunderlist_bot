@@ -42,7 +42,7 @@ EM.run do
         ws.send({
           type: 'message',
           text: "タスク名：#{task_name}\n" + "#{user_name} " + "#{message}\n " + "#{url}",
-          channel: "C5FKTB7J5"
+          channel: "C5GGC1E67"
           }.to_json)
       end
     end
