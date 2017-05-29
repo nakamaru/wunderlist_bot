@@ -19,6 +19,7 @@ EM.run do
 
   ws.on :message do |event|
     data = JSON.parse(event.data)
+    p [:message, data]
     user_name = nil
 
     if data['attachments'] && data['attachments'][0]['pretext'].match(/commented on/) && data['attachments'][0]['fallback'].match(/@\w{1,10}/)
