@@ -22,12 +22,14 @@ EM.run do
     p [:message, data]
     user_name = nil
 
-    if data['attachments'] && data['attachments'][0]['pretext'].match(/commented on/) && data['attachments'][0]['fallback'].match(/@\w{1,10}/)
+    if data['attachments'] && data['attachments'][0]['pretext'].match(/commented on/) && data['attachments'][0]['fallback'].match(/@\w{0,10}/)
       url = data['attachments'][0]['pretext'].match(/https:\/\/wunderlist.com\/#\/tasks\/\d*/)
       t = data['attachments'][0]['pretext'].match(/\|.*/).to_s
       task_name = t.delete!("|").delete!(">")
-      user = data['attachments'][0]['fallback'].match(/@\w{1,10}\.?\w{1,10}/).to_s
+      user = data['attachments'][0]['fallback'].match(/@\w{0,10}\.?\w{0,10}/).to_s
       message = data['attachments'][0]['text'].delete!("#{user}")
+      p 'user'
+      p user
 
       if user == "@nakamaru" || user == '@n' || user == '@maru'
         user_name = '@nakamaru'
