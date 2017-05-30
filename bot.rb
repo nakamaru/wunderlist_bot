@@ -2,56 +2,65 @@ require 'http'
 require 'json'
 require 'eventmachine'
 require 'faye/websocket'
+require 'rufus-scheduler'
 
-response = HTTP.post("https://slack.com/api/rtm.start", params: {
-  token: ENV['SLACK_API_TOKEN']
-  })
-rc = JSON.parse(response.body)
+scheduler = Rufus::Scheduler.new
 
-url = rc['url']
+scheduler.every '5s' do
+  bot_monitoring
+end
 
-EM.run do
-  ws = Faye::WebSocket::Client.new(url)
+def bot_monitoring
+  response = HTTP.post("https://slack.com/api/rtm.start", params: {
+    token: ENV['SLACK_API_TOKEN']
+    })
+  rc = JSON.parse(response.body)
 
-  ws.on :open do
-    p [:open]
-  end
+  url = rc['url']
 
-  ws.on :message do |event|
-    data = JSON.parse(event.data)
-    p [:message, data]
-    user_name = nil
+  EM.run do
+    ws = Faye::WebSocket::Client.new(url)
 
-    if data['attachments'] && data['attachments'][0]['pretext'].match(/commented on/) && data['attachments'][0]['fallback'].match(/@\w{0,10}/)
-      url = data['attachments'][0]['pretext'].match(/https:\/\/wunderlist.com\/#\/tasks\/\d*/)
-      t = data['attachments'][0]['pretext'].match(/\|.*/).to_s
-      task_name = t.delete!("|").delete!(">")
-      user = data['attachments'][0]['fallback'].match(/@\w{0,10}\.?\w{0,10}/).to_s
-      message = data['attachments'][0]['text'].delete!("#{user}")
+    ws.on :open do
+      p [:open]
+    end
 
-      if user == "@nakamaru" || user == '@n' || user == '@maru'
-        user_name = '@nakamaru'
-      elsif user == '@murata' || user == '@m' || user == '@muratayusuke'
-        user_name = '@muratayusuke'
-      elsif user == '@fujiwara' || user == '@f' || user == '@santa0127'
-        user_name = '@santa0127'
-      elsif user == '@sato' || user == '@s' || user == '@shohei' || user == '@shohei.sato'
-        user_name = '@shohei.sato'
-      end
+    ws.on :message do |event|
+      data = JSON.parse(event.data)
+      p [:message, data]
+      user_name = nil
 
-      if user_name
-        ws.send({
-          type: 'message',
-          text: "タスク名：#{task_name}\n" + "#{user_name} " + "#{message}\n " + "#{url}",
-          channel: "C5GGC1E67"
-          }.to_json)
+      if data['attachments'] && data['attachments'][0]['pretext'].match(/commented on/) && data['attachments'][0]['fallback'].match(/@\w{0,10}/)
+        url = data['attachments'][0]['pretext'].match(/https:\/\/wunderlist.com\/#\/tasks\/\d*/)
+        t = data['attachments'][0]['pretext'].match(/\|.*/).to_s
+        task_name = t.delete!("|").delete!(">")
+        user = data['attachments'][0]['fallback'].match(/@\w{0,10}\.?\w{0,10}/).to_s
+        message = data['attachments'][0]['text'].delete!("#{user}")
+
+        if user == "@nakamaru" || user == '@n' || user == '@maru'
+          user_name = '@nakamaru'
+        elsif user == '@murata' || user == '@m' || user == '@muratayusuke'
+          user_name = '@muratayusuke'
+        elsif user == '@fujiwara' || user == '@f' || user == '@santa0127'
+          user_name = '@santa0127'
+        elsif user == '@sato' || user == '@s' || user == '@shohei' || user == '@shohei.sato'
+          user_name = '@shohei.sato'
+        end
+
+        if user_name
+          ws.send({
+            type: 'message',
+            text: "タスク名：#{task_name}\n" + "#{user_name} " + "#{message}\n " + "#{url}",
+            channel: "C5GGC1E67"
+            }.to_json)
+        end
       end
     end
-  end
 
-  ws.on :close do
-    p [:close, ws.url]
-    ws = nil
-    EM.stop
+    ws.on :close do
+      p [:close, ws.url]
+      ws = nil
+      EM.stop
+    end
   end
 end
