@@ -28,8 +28,6 @@ EM.run do
       task_name = t.delete!("|").delete!(">")
       user = data['attachments'][0]['fallback'].match(/@\w{0,10}\.?\w{0,10}/).to_s
       message = data['attachments'][0]['text'].delete!("#{user}")
-      p 'user'
-      p user
 
       if user == "@nakamaru" || user == '@n' || user == '@maru'
         user_name = '@nakamaru'
